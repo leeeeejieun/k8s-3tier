@@ -1,0 +1,45 @@
+---
+- name: dnf-plugins-core 패키지 설치   
+  ansible.builtin.dnf:
+    name: dnf-plugins-core
+    state: present
+
+- name: Docker 저장소 추가   
+  ansible.builtin.command : dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+- name: containerd 설치
+  ansible.builtin.dnf:
+    name: containerd.io
+    state: present
+
+- name: containerd 서비스 활성화
+  ansible.builtin.service:
+    name: containerd
+    state: started
+    enabled: true
+
+- name: containerd 기본 설정 파일 생성
+  ansible.builtin.shell: containerd config default > /etc/containerd/config.toml
+  args:
+    creates: /etc/containerd/config.toml
+  
+# kubelet과 containerd의 cgroup driver를 맞추기 위해 containerd 설정 파일 수정
+# kubelet은 기본적으로 systemd cgroup driver를 사용하고, containerd는 cgroupfs를 사용한다. 따라서 containerd 설정 파일에서 SystemdCgroup을 true로 변경해야 함
+- name: containerd 설정 파일 수정 (SystemdCgroup = true)
+  ansible.builtin.replace:
+    path: /etc/containerd/config.toml
+    regexp: 'SystemdCgroup = false'
+    replace: 'SystemdCgroup = true'
+  notify: restart containerd   # containerd 재시작 핸들러 호출
+  
+- name: critctl 설치    # 쿠버네티스에서 컨테이너 런타임을 관리하기 위해 critctl 도구 설치
+  ansible.builtin.copy:
+    dest: /etc/critctl.yaml
+    content: |
+      runtime-endpoint: unix:///run/containerd/containerd.sock
+      image-endpoint: unix:///run/containerd/containerd.sock
+      timeout: 10
+      debug: false
+  notify: restart containerd   # containerd 재시작 핸들러 호출
+  args:
+    creates: /etc/critctl.yaml

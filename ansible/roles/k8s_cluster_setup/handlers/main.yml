@@ -3,4 +3,9 @@
 - name: reload sysctl
   ansible.builtin.command: sysctl --system
 
+# 02_containerd.yml 핸들러
+- name: restart containerd
+  ansible.builtin.systemd:
+    name: containerd
+    state: restarted
   

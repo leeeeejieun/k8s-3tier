@@ -1,3 +1,6 @@
 ---
 - name: 환경 점검 및 설정
   ansible.builtin.include_tasks: 01_setting.yml
+
+- name: 컨테이너 런타임 containerd 설치
+  ansible.builtin.include_tasks: 02_containerd.yml
