@@ -1,0 +1,39 @@
+---
+- name: 스왑 메모리 비활성화
+  ansible.builtin.command: swapoff -a
+  when : ansible_swaptotal_mb > 0
+
+- name: /etc/fstab에서 스왑 항목 주석 처리
+  ansible.builtin.replace:
+    path : /etc/fstab
+    regexp: '^(.+\s+swap\s+.+)$'
+    replace: '# \1'
+
+- name: 커널 모듈 로드
+  ansible.builtin.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - br_netfilter
+    - overlay
+  
+- name: 부팅 시 커널 모듈이 로드되도록 설정
+  ansible.builtin.copy:
+    dest: /etc/modules-load.d/k8s.conf
+    content: |
+      br_netfilter
+      overlay
+    args:
+      creates: /etc/modules-load.d/k8s.conf   # 파일이 없을 때만 생성
+  
+- name: 커널 파라미터 설정
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/k8s.conf
+    content: |
+      net.bridge.bridge-nf-call-ip6tables = 1
+      net.bridge.bridge-nf-call-iptables = 1
+      net.ipv4.ip_forward = 1
+  notify: reload sysctl   # sysctl 재적용 핸들러 호출
+  args:
+    creates: /etc/sysctl.d/k8s.conf
+

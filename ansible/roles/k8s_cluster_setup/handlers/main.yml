@@ -1,0 +1,6 @@
+---
+# 01_setting.yml 핸들러
+- name: reload sysctl
+  ansible.builtin.command: sysctl --system
+
+  
