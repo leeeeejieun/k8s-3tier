@@ -32,9 +32,9 @@
     replace: 'SystemdCgroup = true'
   notify: restart containerd   # containerd 재시작 핸들러 호출
   
-- name: critctl 설치    # 쿠버네티스에서 컨테이너 런타임을 관리하기 위해 critctl 도구 설치
+- name: crictl 설치    # 쿠버네티스에서 컨테이너 런타임을 관리하기 위해 crictl 도구 설치
   ansible.builtin.copy:
-    dest: /etc/critctl.yaml
+    dest: /etc/crictl.yaml
     content: |
       runtime-endpoint: unix:///run/containerd/containerd.sock
       image-endpoint: unix:///run/containerd/containerd.sock
@@ -42,4 +42,4 @@
       debug: false
   notify: restart containerd   # containerd 재시작 핸들러 호출
   args:
-    creates: /etc/critctl.yaml
+    creates: /etc/crictl.yaml
