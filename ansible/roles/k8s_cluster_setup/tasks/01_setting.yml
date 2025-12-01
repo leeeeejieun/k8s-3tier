@@ -6,7 +6,7 @@
 - name: /etc/fstab에서 스왑 항목 주석 처리
   ansible.builtin.replace:
     path : /etc/fstab
-    regexp: '^(.+\s+swap\s+.+)$'
+    regexp: ^(\s*[^#].*\s+swap\s+.*)$  # 주석 처리가 안되어있는 스왑 라인만 찾음
     replace: '# \1'
 
 - name: 커널 모듈 로드
@@ -36,4 +36,5 @@
   notify: reload sysctl   # sysctl 재적용 핸들러 호출
   args:
     creates: /etc/sysctl.d/k8s.conf
+
 
