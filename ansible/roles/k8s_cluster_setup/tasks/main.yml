@@ -1,6 +1,20 @@
 ---
-- name: 환경 점검 및 설정
+- name: 1. 환경 점검 및 설정
   ansible.builtin.include_tasks: 01_setting.yml
 
-- name: 컨테이너 런타임 containerd 설치
-  ansible.builtin.include_tasks: 02_containerd.yml
+- name: 2. 컨테이너 런타임 containerd 설치
+  ansible.builtin.include_tasks: 02_install_containerd.yml
+
+- name: 3. kubectl, kubeadm, kubelet 설치
+  ansible.builtin.include_tasks: 03_install_kube_tools.yml
+
+- name: 4. control-plane node 초기화
+  ansible.builtin.include_tasks: 04_init_control_plane.yml
+  when: "'control_plane' in group_names"
+
+- name: 5. Calico 네트워크 플러그인 설치
+  ansible.builtin.include_tasks: 05_install_calico.yml
+  when: "'control_plane' in group_names"
+
+- name: 6. Worker node를 control-plane에 조인
+  ansible.builtin.include_tasks: 06_join_worker_nodes.yml
