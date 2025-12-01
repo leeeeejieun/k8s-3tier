@@ -1,0 +1,15 @@
+- name: control-plane node 초기화
+  ansible.builtin.command: kubeadm init --apiserver-advertise-address 192.168.10.20
+  register: kubeadm_init_output
+  args:
+    creates: /etc/kubernetes/admin.conf   # 이미 초기화된 경우 다시 실행하지 않음 
+
+- name: root가 아닌 사용자가 kubectl 명령어를 사용할 수 있도록 설정
+  become: false
+  ansible.builtin.shell: |
+    mkdir -p $HOME/.kube
+    sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config
+    sudo chown $(id -u):$(id -g) $HOME/.kube/config
+  when: kubeadm_init_output.changed
+
+
