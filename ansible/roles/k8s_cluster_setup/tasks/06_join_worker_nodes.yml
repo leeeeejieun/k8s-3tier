@@ -1,0 +1,19 @@
+---
+- name: join을 위한 토큰 생성
+  ansible.builtin.command: kubeadm token create --print-join-command
+  register: kubeadm_join_cmd
+  when: "'control_plane' in group_names"
+
+# control_plane 노드의 매직 변수에 join_cmd 설정
+- name: join 명령어를 매직 변수에 설정
+  set_fact:
+    join_cmd: "{{ kubeadm_join_cmd.stdout_lines[0] }}"
+  when: "'control_plane' in group_names"
+
+- name: control-plane에 Worker 노드 조인
+  ansible.builtin.command:
+    cmd: "{{ hostvars[groups['control_plane'][0]].join_cmd }}"    # control_plane 그룹에서 첫 번째 호스트의 join_cmd 사용
+  when: "'worker_nodes' in group_names"
+  register: join_result
+  args:
+    creates: /etc/kubernetes/kubelet.conf   # 이미 조인된 경우 다시 실행하지 않음"
