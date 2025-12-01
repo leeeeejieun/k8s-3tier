@@ -1,0 +1,24 @@
+---
+- name: kubectl, kubeadm, kubelet 설치를 위한 저장소 추가
+  ansible.builtin.copy:
+    dest: /etc/yum.repos.d/kubernetes.repo
+    content: |
+      [kubernetes]
+      name=Kubernetes
+      baseurl=https://pkgs.k8s.io/core:/stable:/v1.34/rpm/
+      enabled=1
+      gpgcheck=1
+      gpgkey=https://pkgs.k8s.io/core:/stable:/v1.34/rpm/repodata/repomd.xml.key
+      exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
+
+- name: kubectl, kubeadm, kubelet 설치
+  ansible.builtin.command: yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+  args:
+    creates: /usr/bin/kubeadm  # kubeadm가 이미 설치되어 있으면 다시 설치하지 않음
+    
+- name: kubelet 서비스 활성화
+  ansible.builtin.service:
+    name: kubelet
+    state: started
+    enabled: true
+    
