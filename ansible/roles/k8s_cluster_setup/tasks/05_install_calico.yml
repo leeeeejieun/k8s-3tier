@@ -1,0 +1,16 @@
+---
+- name: Calico 설치를 위한 디렉토리 생성
+  ansible.builtin.file:
+    path: /tools/cni
+    state: directory
+    mode: '0755'
+
+- name: Calico 네트워크 플러그인 설치를 위한 매니페스트 다운로드
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/projectcalico/calico/v3.31.2/manifests/calico.yaml
+    dest: /tools/cni/calico.yml
+
+- name: Calico 설치
+  become: false
+  ansible.builtin.command: kubectl apply -f /tools/cni/calico.yml
+  
